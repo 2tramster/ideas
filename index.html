@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Idea Bank</title>
+<style>
+  :root{--red:#db0619;--ink:#222;--mute:#6b6b6b;--bg:#f6f5f0;--card:#fff;--line:#e6e3da}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  header{padding:28px 24px 8px;max-width:1500px;margin:0 auto}
+  h1{margin:0;font-size:34px;letter-spacing:-.02em;color:var(--red);text-transform:uppercase}
+  .sub{color:var(--mute);margin:6px 0 0;font-size:15px}
+  .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:16px}
+  .chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;font-size:14px;cursor:pointer;color:var(--ink)}
+  .chip.on{background:var(--red);border-color:var(--red);color:#fff}
+  .spacer{flex:1}
+  .btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 14px;font-size:14px;cursor:pointer}
+  #note{font-size:13px;color:var(--mute);margin-left:4px}
+  main{max-width:1500px;margin:0 auto;padding:12px 24px 60px;display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+  .top{display:flex;align-items:center;gap:10px;padding:14px 16px 6px}
+  .rank{width:30px;height:30px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px;flex:none}
+  .who{font-weight:700;font-size:17px}
+  .plat{color:var(--mute);font-size:13px}
+  .pill{margin-left:auto;font-size:12px;border-radius:999px;padding:3px 10px;background:#f1efe8;color:#555}
+  .stats{display:flex;flex-wrap:wrap;gap:6px 14px;padding:4px 16px 12px;font-size:14px}
+  .stats b{color:var(--red);font-size:18px}
+  .stats span{color:var(--mute)}
+  .player{background:#111;display:flex;justify-content:center}
+  iframe{border:0;width:100%;display:block}
+  iframe.tt{height:600px;max-width:340px}
+  iframe.ig{height:760px;max-width:420px;background:#fff}
+  .fallback{padding:40px 16px;color:#fff;text-align:center}
+  .txt{padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px}
+  .what{font-weight:700;font-size:17px;line-height:1.25}
+  .lab{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--red)}
+  .idea{font-size:16px}
+  a{color:var(--red)}
+  .open{font-size:13px;margin-top:2px}
+  .err{max-width:1500px;margin:0 auto;padding:0 24px;color:#9a3b00;font-size:14px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Idea Bank</h1>
+  <p class="sub">Competitor posts that worked, with an idea for each. Add a row in the Google Sheet and it shows up here.</p>
+  <div class="bar" id="chips"></div>
+</header>
+<div class="err" id="err"></div>
+<main id="grid"></main>
+
+<script>
+// Paste the Google Sheet "Publish to web" CSV link between the quotes. Leave empty to use the built-in list.
+const SHEET_CSV_URL = "";
+
+const FALLBACK_CSV = "Rank,Brand,Platform,Link,Engagement rate,Views,Likes,Comments,Times above normal,Posted,What it is,Idea,Status\n1,Skittles,TikTok,https://www.tiktok.com/@skittles/video/7621302552063266078,12.8%,54641,6925,85,23x,,Movie character plays with the candy (Skittles x Project Hail Mary),Tie a reel to what teens are into that month,New\n2,Nerds,TikTok,https://www.tiktok.com/@nerdscandy/video/7686611013352869150,6.5%,22210,1401,36,3x,2026-09-17,\"\"\"Your favorite is staying\"\" - Cherry Lemonade made permanent\",Fans vote which product comes back,New\n3,Nerds,TikTok,https://www.tiktok.com/@nerdscandy/video/7671010844653767949,6.0%,28305,1585,122,4x,2026-08-06,\"\"\"Today's your lucky day\"\" giveaway\",Comment to win a box,New\n4,Nerds,TikTok,https://www.tiktok.com/@nerdscandy/video/7623798283336469791,4.7%,97531,4431,151,10x,2026-04-01,April Fools fake product,Plan one for 1 April,New\n5,Skittles,TikTok,https://www.tiktok.com/@skittles/video/7670567623356108063,4.4%,18454,410,403,3x,,\"\"\"Don't break the window!\"\" guessing reel\",Guess-the-answer reel,New\n6,Nerds,TikTok,https://www.tiktok.com/@nerdscandy/video/7555906945601916173,3.7%,110114,3703,374,9x,2025-09-30,\"Texture close-up (crunchy, gummy, juicy)\",Gummy texture close-ups,New\n7,Sour Patch Kids,Instagram,https://www.instagram.com/p/DfkS0zfjrtM/,n/a (photo),,44359,2592,21x,2026-11-10,Calling out a first name (photo post),\"\"\"J\u0101ni, es tevi redzu\"\" with common Latvian names\",New\n8,Sour Patch Kids,Instagram,https://www.instagram.com/p/DfZ6OMkjr79/,n/a (photo),,15724,1085,7x,2026-11-06,Guilt-trip dare (photo post),Cheeky dare in teen slang,New\n";
+
+function parseCSV(t){
+  const rows=[];let r=[],c='',q=false;
+  for(let i=0;i<t.length;i++){
+    const ch=t[i];
+    if(q){ if(ch=='"'){ if(t[i+1]=='"'){c+='"';i++} else q=false } else c+=ch }
+    else{
+      if(ch=='"') q=true;
+      else if(ch==','){ r.push(c);c='' }
+      else if(ch=='\n'||ch=='\r'){ if(ch=='\r'&&t[i+1]=='\n')i++; r.push(c);c='';rows.push(r);r=[] }
+      else c+=ch;
+    }
+  }
+  if(c!==''||r.length){ r.push(c); rows.push(r) }
+  return rows.filter(x=>x.some(v=>v.trim()));
+}
+function toObjects(csv){
+  const rows=parseCSV(csv); if(!rows.length) return [];
+  const head=rows[0].map(h=>h.trim().toLowerCase());
+  return rows.slice(1).map(r=>{const o={};head.forEach((h,i)=>o[h]=(r[i]||'').trim());return o});
+}
+const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function player(url){
+  let m=url.match(/tiktok\.com\/.*?video\/(\d+)/);
+  if(m) return `<iframe class="tt" loading="lazy" allow="fullscreen; autoplay" src="https://www.tiktok.com/player/v1/${m[1]}?muted=1" onload="muteTT(this)"></iframe>`;
+  m=url.match(/instagram\.com\/(?:[^\/]+\/)?(p|reel|tv)\/([^\/?#]+)/);
+  if(m) return `<iframe class="ig" loading="lazy" scrolling="no" src="https://www.instagram.com/${m[1]}/${m[2]}/embed/"></iframe>`;
+  return `<div class="fallback">No player for this link.<br><a style="color:#fff" href="${esc(url)}" target="_blank" rel="noopener">Open it</a></div>`;
+}
+
+// Keep every TikTok video muted (the player also gets muted=1 in its address).
+function muteTT(f){
+  const send=()=>{ try{ f.contentWindow.postMessage({'x-tiktok-player':true,type:'mute'},'*') }catch(e){} };
+  send(); setTimeout(send,1500);
+}
+
+let DATA=[], FILTER='All';
+
+function render(){
+  const statuses=['All',...new Set(DATA.map(d=>d['status']).filter(Boolean))];
+  const chips=document.getElementById('chips');
+  chips.innerHTML=statuses.map(s=>`<button class="chip ${s===FILTER?'on':''}" data-s="${esc(s)}">${esc(s)}</button>`).join('')
+    +`<span class="spacer"></span><span id="note"></span><button class="btn" id="refresh">Refresh</button>`;
+  chips.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{FILTER=b.dataset.s;render()});
+  document.getElementById('refresh').onclick=load;
+  document.getElementById('note').textContent=SRC;
+  const grid=document.getElementById('grid');
+  const rows=DATA.filter(d=>d['link']&&(FILTER==='All'||d['status']===FILTER));
+  grid.innerHTML=rows.map(d=>{
+    const er=d['engagement rate'], views=d['views'], lift=d['times above normal'];
+    const stats=[
+      er?`<div><b>${esc(er)}</b> <span>engagement</span></div>`:'',
+      views?`<div><b>${esc(Number(views).toLocaleString('en-US'))}</b> <span>views</span></div>`:'',
+      lift?`<div><b>${esc(lift)}</b> <span>above this account's normal</span></div>`:''
+    ].join('');
+    return `<article class="card">
+      <div class="top"><div class="rank">${esc(d['rank'])}</div>
+        <div><div class="who">${esc(d['brand'])}</div><div class="plat">${esc(d['platform'])}${d['posted']?' · '+esc(d['posted']):''}</div></div>
+        ${d['status']?`<span class="pill">${esc(d['status'])}</span>`:''}</div>
+      <div class="stats">${stats}</div>
+      <div class="player">${player(d['link'])}</div>
+      <div class="txt">
+        <div class="what">${esc(d['what it is'])}</div>
+        <div class="lab">Idea</div>
+        <div class="idea">${esc(d['idea'])}</div>
+        <a class="open" href="${esc(d['link'])}" target="_blank" rel="noopener">Open original post</a>
+      </div></article>`;
+  }).join('');
+}
+
+let SRC='';
+async function load(){
+  const err=document.getElementById('err'); err.textContent='';
+  let csv=FALLBACK_CSV; SRC='Built-in list';
+  if(SHEET_CSV_URL){
+    try{
+      const u=SHEET_CSV_URL+(SHEET_CSV_URL.includes('?')?'&':'?')+'t='+Date.now();
+      const res=await fetch(u); if(!res.ok) throw new Error(res.status);
+      csv=await res.text(); SRC='Live from Google Sheet';
+    }catch(e){ err.textContent='Could not read the Google Sheet, showing the built-in list instead.'; }
+  }
+  DATA=toObjects(csv); render();
+}
+load();
+</script>
+</body>
+</html>
