@@ -29,6 +29,11 @@
   .stats span{color:var(--mute)}
   .player{background:#111;display:flex;justify-content:center}
   iframe{border:0;width:100%;display:block}
+  .player img{display:block;max-width:100%;height:auto;max-height:640px;object-fit:contain}
+  .wide{grid-column:span 2}
+  .wide .player{gap:6px;padding:0}
+  .wide .player img{max-width:49%}
+  @media (max-width:760px){.wide{grid-column:span 1}}
   iframe.tt{height:600px;max-width:340px}
   iframe.ig{height:760px;max-width:420px;background:#fff}
   .fallback{padding:40px 16px;color:#fff;text-align:center}
@@ -54,7 +59,7 @@
 // The page reads this Google Sheet live. If it cannot, it shows the built-in list below.
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/18P9G8LTgcJRcfifi-RscBdpgqc3y1gk46XpeL-3EA-w/export?format=csv&gid=264212288";
 
-const FALLBACK_CSV = "Rank,Brand,Platform,Link,Engagement rate,Views,Likes,Comments,Times above normal,Posted,What it is,Idea,Status\n1,Nerds,TikTok,https://www.tiktok.com/@nerdscandy/video/7686611013352869150,6.5%,22210,1401,36,3x,2026-09-17,\"\"\"Your favorite is staying\"\" - Cherry Lemonade made permanent\",Fans vote which product comes back,New\n2,Nerds,TikTok,https://www.tiktok.com/@nerdscandy/video/7671010844653767949,6.0%,28305,1585,122,4x,2026-08-06,\"POV skit: \"\"you tell me you've never tried Gummy Clusters before\"\"\",POV skit: someone reacts to a friend who has never tried the candy,New\n3,Skittles,TikTok,https://www.tiktok.com/@skittles/video/7670567623356108063,4.4%,18454,410,403,3x,,\"Handwritten sign on a car window: \"\"Don't break the window! He is fine. The A.C. is on and he is eating Skittles.\"\"\",\"Funny handwritten sign in real life, with the candy as the punchline\",New\n4,Sour Patch Kids,Instagram,https://www.instagram.com/p/DfkS0zfjrtM/,\"44,359 likes\",,44359,2592,21x,2026-11-10,Calling out a first name (photo post),\"\"\"J\u0101ni, es tevi redzu\"\" with common Latvian names\",New\n5,Sour Patch Kids,Instagram,https://www.instagram.com/p/DfZ6OMkjr79/,\"15,724 likes\",,15724,1085,7x,2026-11-06,Guilt-trip dare (photo post),Cheeky dare in teen slang,New\n";
+const FALLBACK_CSV = "Rank,Brand,Platform,Link,Engagement rate,Views,Likes,Comments,Times above normal,Posted,What it is,Idea,Status\n1,Nerds,TikTok,https://www.tiktok.com/@nerdscandy/video/7686611013352869150,6.5%,22210,1401,36,3x,2026-09-17,\"\"\"Your favorite is staying\"\" - Cherry Lemonade made permanent\",Fans vote which product comes back,New\n2,Nerds,TikTok,https://www.tiktok.com/@nerdscandy/video/7671010844653767949,6.0%,28305,1585,122,4x,2026-08-06,\"POV skit: \"\"you tell me you've never tried Gummy Clusters before\"\"\",POV skit: someone reacts to a friend who has never tried the candy,New\n3,Skittles,TikTok,https://www.tiktok.com/@skittles/video/7670567623356108063,4.4%,18454,410,403,3x,,\"Handwritten sign on a car window: \"\"Don't break the window! He is fine. The A.C. is on and he is eating Skittles.\"\"\",\"Funny handwritten sign in real life, with the candy as the punchline\",New\n4,Sour Patch Kids,Instagram,https://www.instagram.com/p/DfkS0zfjrtM/,\"44,359 likes\",,44359,2592,21x,2026-11-10,Calling out a first name (photo post),\"\"\"J\u0101ni, es tevi redzu\"\" with common Latvian names\",New\n5,Sour Patch Kids,Instagram,https://www.instagram.com/p/DfZ6OMkjr79/,\"15,724 likes\",,15724,1085,7x,2026-11-06,Guilt-trip dare (photo post),Cheeky dare in teen slang,New\n6,Haribo,Face filter,https://2tramster.github.io/ideas/img/filter-1.jpg https://2tramster.github.io/ideas/img/filter-2.jpg,\"1,100 likes\",,1100,14,,2022,\"TT filter: Haribo face-filter games. \"\"Catch the Party Hats\"\" (Goldbears 100th birthday, paid creator post) and \"\"Blink to fill the screen with Starmix gummies\"\"\",\"Make a face-filter mini game with the candy: catch it with your head, or blink to fill the screen\",New\n";
 
 function parseCSV(t){
   const rows=[];let r=[],c='',q=false;
@@ -92,6 +97,13 @@ function muteTT(f){
   send(); setTimeout(send,1500);
 }
 
+const isImg=u=>/\.(png|jpe?g|gif|webp)(\?.*)?$/i.test(u);
+function media(link){
+  const parts=link.split(/\s+/).filter(Boolean);
+  if(parts.length&&parts.every(isImg)) return parts.map(u=>`<img src="${esc(u)}" alt="">`).join('');
+  return player(parts[0]||'');
+}
+
 let DATA=[], FILTER='All';
 
 function render(){
@@ -111,17 +123,18 @@ function render(){
       views?`<div><b>${esc(Number(views).toLocaleString('en-US'))}</b> <span>views</span></div>`:'',
       lift?`<div><b>${esc(lift)}</b> <span>above this account's normal</span></div>`:''
     ].join('');
-    return `<article class="card">
+    const links=d['link'].split(/\s+/).filter(Boolean); const imgs=links.filter(isImg).length;
+    return `<article class="card${imgs>1?' wide':''}">
       <div class="top"><div class="rank">${esc(d['rank'])}</div>
         <div><div class="who">${esc(d['brand'])}</div><div class="plat">${esc(d['platform'])}${d['posted']?' · '+esc(d['posted']):''}</div></div>
         ${d['status']?`<span class="pill">${esc(d['status'])}</span>`:''}</div>
       <div class="stats">${stats}</div>
-      <div class="player">${player(d['link'])}</div>
+      <div class="player">${media(d['link'])}</div>
       <div class="txt">
         <div class="what">${esc(d['what it is'])}</div>
         <div class="lab">Idea</div>
         <div class="idea">${esc(d['idea'])}</div>
-        <a class="open" href="${esc(d['link'])}" target="_blank" rel="noopener">Open original post</a>
+        ${imgs?'':`<a class="open" href="${esc(links[0])}" target="_blank" rel="noopener">Open original post</a>`}
       </div></article>`;
   }).join('');
 }
