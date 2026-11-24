@@ -4,12 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Idea Bank</title>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="img/logo.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <style>
   :root{--red:#db0619;--ink:#222;--mute:#6b6b6b;--bg:#f6f5f0;--card:#fff;--line:#e6e3da}
   *{box-sizing:border-box}
   body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink)}
   header{padding:28px 24px 8px;max-width:1500px;margin:0 auto}
-  h1{margin:0;font-size:34px;letter-spacing:-.02em;color:var(--red);text-transform:uppercase}
+  h1{margin:0;font-size:34px;letter-spacing:-.02em;color:var(--red);text-transform:uppercase;display:flex;align-items:center;gap:12px}
+  h1 img{height:44px;width:auto;display:block}
   .sub{color:var(--mute);margin:6px 0 0;font-size:15px}
   .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:16px}
   .chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;font-size:14px;cursor:pointer;color:var(--ink)}
@@ -48,7 +52,7 @@
 </head>
 <body>
 <header>
-  <h1>Idea Bank</h1>
+  <h1><img src="img/logo.png" alt="">Idea Bank</h1>
   <p class="sub">Competitor posts that worked, with an idea for each. Add a row in the Google Sheet and it shows up here.</p>
   <div class="bar" id="chips"></div>
 </header>
