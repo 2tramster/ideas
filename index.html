@@ -107,7 +107,7 @@ function render(){
   grid.innerHTML=rows.map(d=>{
     const er=d['engagement rate'], views=d['views'], lift=d['times above normal'];
     const stats=[
-      er?`<div><b>${esc(er)}</b>${/%/.test(er)?' <span>engagement</span>':''}</div>`:'',
+      er?`<div><b>${esc(er)}</b>${/%/.test(er)?' <span>eng.rate</span>':''}</div>`:'',
       views?`<div><b>${esc(Number(views).toLocaleString('en-US'))}</b> <span>views</span></div>`:'',
       lift?`<div><b>${esc(lift)}</b> <span>above this account's normal</span></div>`:''
     ].join('');
